@@ -227,6 +227,8 @@ import java.util.concurrent.TimeoutException;
   private int maskingPeriodIndex;
   private long maskingWindowPositionMs;
 
+  private Handler eventHandler;
+
   @SuppressLint("HandlerLeak")
   @SuppressWarnings("deprecation") // Control flow for old volume commands
   public ExoPlayerImpl(ExoPlayer.Builder builder, @Nullable Player wrappingPlayer) {
@@ -251,7 +253,7 @@ import java.util.concurrent.TimeoutException;
       detachSurfaceTimeoutMs = builder.detachSurfaceTimeoutMs;
       componentListener = new ComponentListener();
       frameMetadataListener = new FrameMetadataListener();
-      Handler eventHandler = new Handler(builder.looper);
+      eventHandler = new Handler(builder.looper);
       renderers =
           builder
               .renderersFactorySupplier
@@ -2784,7 +2786,7 @@ import java.util.concurrent.TimeoutException;
     // The constructor may be executed on a background thread. Wait with accessing the player from
     // the app thread until the constructor finished executing.
     constructorFinished.blockUninterruptible();
-    if (Thread.currentThread() != getApplicationLooper().getThread()) {
+    if (Thread.currentThread() != eventHandler.getLooper().getThread()) {
       String message =
           Util.formatInvariant(
               "Player is accessed on the wrong thread.\n"
